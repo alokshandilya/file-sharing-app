@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Client Files{% endblock %}
+{% block content %}
+    <h2>Uploaded Files</h2>
+    <ul>
+        {% for file in uploaded_files %}
+            <li>{{ file.filename }} <a href="/download-file/{{ file.filename }}">Download</a></li>
+        {% endfor %}
+    </ul>
+{% endblock %}

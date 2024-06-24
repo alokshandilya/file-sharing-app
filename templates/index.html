@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block content %}
+    <h2>Welcome to Secure File Sharing System</h2>
+    <p>Please select an action:</p>
+    <ul>
+        <li><a href="/login">Login</a></li>
+        <li><a href="/signup">Sign Up</a> (for new clients)</li>
+        <li><a href="/upload-file">Upload File</a> (for Operation User)</li>
+        <li><a href="/client-files">View Uploaded Files</a> (for Client User)</li>
+    </ul>
+{% endblock %}
