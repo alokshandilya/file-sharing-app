@@ -1,0 +1,7 @@
+Flask
+Flask-RESTful
+Flask-JWT-Extended
+Flask-Mail
+SQLAlchemy
+Flask-Migrate
+cryptography
