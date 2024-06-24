@@ -10,8 +10,8 @@ app.secret_key = 'supersecretkey'  # Set a secret key for session management
 # Simulated database for storing uploaded files information and user credentials
 uploaded_files = []
 users = {
-    'operation_user': {'password': 'operation_password'},
-    'client_user': {'password': 'client_password'}
+    'operation_user': {'password': 'operation_password', 'role': 'operation'},
+    'client_user': {'password': 'client_password', 'role': 'client'}
 }
 
 
@@ -36,6 +36,25 @@ def requires_auth(f):
     return decorated
 
 
+# Decorator function to enforce role-based authorization
+def requires_role(role):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if 'username' not in session:
+                return render_template('login.html', message='Authentication failed'), 401
+            username = session['username']
+            if not authenticate(username, users[username]['password']):
+                return render_template('login.html', message='Authentication failed'), 401
+            if users[username]['role'] != role:
+                return render_template('index.html', message='Access denied'), 403
+            return f(*args, **kwargs)
+
+        return decorated_function
+
+    return decorator
+
+
 # Index route
 @app.route('/')
 def index():
@@ -50,7 +69,8 @@ def login():
         password = request.form['password']
         if authenticate(username, password):
             session['username'] = username
-            return redirect(url_for('upload_file') if username == 'operation_user' else url_for('client_files'))
+            return redirect(
+                url_for('upload_file') if users[username]['role'] == 'operation' else url_for('client_files'))
         else:
             return render_template('login.html', message='Invalid credentials')
     return render_template('login.html')
@@ -59,6 +79,7 @@ def login():
 # Route for Operation User to upload file
 @app.route('/upload-file', methods=['GET', 'POST'])
 @requires_auth
+@requires_role('operation')
 def upload_file():
     if request.method == 'POST':
         file = request.files.get('file')
@@ -85,6 +106,7 @@ def upload_file():
 # Route for Client User to list uploaded files
 @app.route('/client-files')
 @requires_auth
+@requires_role('client')
 def client_files():
     return render_template('client_files.html', uploaded_files=uploaded_files)
 
@@ -92,6 +114,7 @@ def client_files():
 # Route for Client User to download file
 @app.route('/download-file/<filename>')
 @requires_auth
+@requires_role('client')
 def download_file(filename):
     # Check if the file exists
     file_info = next((file for file in uploaded_files if file['filename'] == filename), None)
@@ -107,6 +130,7 @@ def download_file(filename):
 # Route to handle the actual file download
 @app.route('/download/<filename>')
 @requires_auth
+@requires_role('client')
 def download(filename):
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     if not os.path.exists(file_path):
@@ -127,7 +151,7 @@ def signup():
             return render_template('signup.html', message='Username already exists')
 
         # Add new user to the database (simulated for demo)
-        users[username] = {'password': password}
+        users[username] = {'password': password, 'role': 'client'}
 
         return redirect(url_for('login'))
 
