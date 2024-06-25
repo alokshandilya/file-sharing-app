@@ -68,24 +68,27 @@ def requires_role(role):
 
 
 # Index route
-@app.route('/')
+@app.route("/")
 def index():
-    return render_template('index.html')
+    return render_template("index.html")
 
 
 # Login route
-@app.route('/login', methods=['GET', 'POST'])
+@app.route("/login", methods=["GET", "POST"])
 def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
         if authenticate(username, password):
-            session['username'] = username
+            session["username"] = username
             return redirect(
-                url_for('upload_file') if users[username]['role'] == 'operation' else url_for('client_files'))
+                url_for("upload_file")
+                if users[username]["role"] == "operation"
+                else url_for("client_files")
+            )
         else:
-            return render_template('login.html', message='Invalid credentials')
-    return render_template('login.html')
+            return render_template("index.html", error="Invalid credentials")
+    return render_template("index.html")
 
 
 # Route for Operation User to upload file
