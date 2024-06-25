@@ -4,14 +4,16 @@ import os
 from functools import wraps
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = 'uploads'
-app.secret_key = 'supersecretkey'  # Set a secret key for session management
+app.config["UPLOAD_FOLDER"] = "uploads"
+
+# TODO: Change the secret key to a secure value before deployment
+app.secret_key = "supersecretkey"
 
 # Simulated database for storing uploaded files information and user credentials
 uploaded_files = []
 users = {
-    'operation_user': {'password': 'operation_password', 'role': 'operation'},
-    'client_user': {'password': 'client_password', 'role': 'client'}
+    "operation_user": {"password": "operation_password", "role": "operation"},
+    "client_user": {"password": "client_password", "role": "client"},
 }
 
 
