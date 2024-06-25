@@ -9,3 +9,4 @@ python-dotenv
 gunicorn
 mysql-connector-python
 Flask-SQLAlchemy
+dropbox
