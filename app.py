@@ -16,10 +16,14 @@ users = {
     "client_user": {"password": "client_password", "role": "client"},
 }
 
+# Ensure the upload folder exists
+if not os.path.exists(app.config["UPLOAD_FOLDER"]):
+    os.makedirs(app.config["UPLOAD_FOLDER"])
+
 
 # Helper function to authenticate users
 def authenticate(username, password):
-    if username in users and users[username]['password'] == password:
+    if username in users and users[username]["password"] == password:
         return True
     return False
 
