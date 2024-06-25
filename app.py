@@ -3,20 +3,22 @@ from werkzeug.utils import secure_filename
 from flask_sqlalchemy import SQLAlchemy
 import os
 from functools import wraps
-import urllib.parse
 
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = "uploads"
 
-# TODO: Change the secret key to a random value before deploying to production
-app.secret_key = "supersecretkey"
+# Load environment variables
+load_dotenv()
 
-
-username = "root"
-password = urllib.parse.quote("Alokkolal@123")
+app.secret_key = os.getenv("SECRET_KEY")
+username = os.getenv("USER")
+password = os.getenv("PWD")
+host = os.getenv("HOST")
+db_name = os.getenv("DB_NAME")
+port = os.getenv("PORT")
 # Database configuration
 app.config["SQLALCHEMY_DATABASE_URI"] = (
-    f"mysql+mysqlconnector://{username}:{password}@localhost/filesharing"
+    f"mysql+mysqlconnector://{username}:{password}@{host}:{port}/{db_name}"
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
