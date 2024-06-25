@@ -1,6 +1,7 @@
 from flask import Flask, request, render_template, send_file, redirect, url_for, session
 from werkzeug.utils import secure_filename
 from flask_sqlalchemy import SQLAlchemy
+from dotenv import load_dotenv
 import os
 from functools import wraps
 
