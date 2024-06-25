@@ -1,20 +1,22 @@
 from flask import Flask, request, render_template, send_file, redirect, url_for, session
 from werkzeug.utils import secure_filename
+from flask_sqlalchemy import SQLAlchemy
 import os
 from functools import wraps
 
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = "uploads"
 
-# TODO: Change the secret key to a secure value before deployment
+# TODO: Change the secret key to a random value before deploying to production
 app.secret_key = "supersecretkey"
 
-# Simulated database for storing uploaded files information and user credentials
-uploaded_files = []
-users = {
-    "operation_user": {"password": "operation_password", "role": "operation"},
-    "client_user": {"password": "client_password", "role": "client"},
-}
+# Database configuration
+app.config["SQLALCHEMY_DATABASE_URI"] = (
+    "mysql+mysqlconnector://root:Alokkolal@123@localhost/file-sharing"
+)
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+db = SQLAlchemy(app)
 
 # Ensure the upload folder exists
 if not os.path.exists(app.config["UPLOAD_FOLDER"]):
