@@ -92,30 +92,35 @@ def login():
 
 
 # Route for Operation User to upload file
-@app.route('/upload-file', methods=['GET', 'POST'])
+@app.route("/upload-file", methods=["GET", "POST"])
 @requires_auth
-@requires_role('operation')
+@requires_role("operation")
 def upload_file():
-    if request.method == 'POST':
-        file = request.files.get('file')
+    if request.method == "POST":
+        file = request.files.get("file")
         if not file:
-            return render_template('upload.html', message='No file uploaded')
+            return render_template("upload.html", message="No file uploaded")
 
         # Check file type
-        allowed_extensions = {'pptx', 'docx', 'xlsx'}
-        if '.' not in file.filename or file.filename.rsplit('.', 1)[1].lower() not in allowed_extensions:
-            return render_template('upload.html', message='File type not allowed')
+        allowed_extensions = {"pptx", "docx", "xlsx"}
+        if (
+            "." not in file.filename
+            or file.filename.rsplit(".", 1)[1].lower() not in allowed_extensions
+        ):
+            return render_template(
+                "upload.html", message="Only .pptx, .docx, .xlsx are allowed"
+            )
 
         # Save file to uploads folder
         filename = secure_filename(file.filename)
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
 
         # Store file info (for demonstration, use a proper database in production)
         uploaded_files.append({'filename': filename, 'uploader': session['username']})
 
-        return redirect(url_for('upload_file'))
+        return render_template("upload.html", message="File uploaded")
 
-    return render_template('upload.html')
+    return render_template("upload.html")
 
 
 # Route for Client User to list uploaded files
