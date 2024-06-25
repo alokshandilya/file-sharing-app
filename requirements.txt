@@ -5,3 +5,4 @@ Flask-Mail
 SQLAlchemy
 Flask-Migrate
 cryptography
+python-dotenv
