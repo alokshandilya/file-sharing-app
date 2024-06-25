@@ -3,6 +3,7 @@ from werkzeug.utils import secure_filename
 from flask_sqlalchemy import SQLAlchemy
 import os
 from functools import wraps
+import urllib.parse
 
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = "uploads"
@@ -10,9 +11,12 @@ app.config["UPLOAD_FOLDER"] = "uploads"
 # TODO: Change the secret key to a random value before deploying to production
 app.secret_key = "supersecretkey"
 
+
+username = "root"
+password = urllib.parse.quote("Alokkolal@123")
 # Database configuration
 app.config["SQLALCHEMY_DATABASE_URI"] = (
-    "mysql+mysqlconnector://root:Alokkolal@123@localhost/file-sharing"
+    f"mysql+mysqlconnector://{username}:{password}@localhost/filesharing"
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
@@ -37,16 +41,10 @@ class UploadedFile(db.Model):
     uploader = db.Column(db.String(80), nullable=False)
 
 
-# Create tables
-with app.app_context():
-    db.create_all()
-
-
 # Helper function to authenticate users
 def authenticate(username, password):
-    if username in users and users[username]["password"] == password:
-        return True
-    return False
+    user = User.query.filter_by(username=username, password=password).first()
+    return user is not None
 
 
 # Decorator function to enforce authentication
@@ -56,7 +54,8 @@ def requires_auth(f):
         if "username" not in session:
             return render_template("index.html", message="Authentication failed"), 401
         username = session["username"]
-        if not authenticate(username, users[username]["password"]):
+        user = User.query.filter_by(username=username).first()
+        if not user or not authenticate(username, user.password):
             return render_template("index.html", message="Authentication failed"), 401
         return f(*args, **kwargs)
 
@@ -74,12 +73,12 @@ def requires_role(role):
                     401,
                 )
             username = session["username"]
-            if not authenticate(username, users[username]["password"]):
-                return (
-                    render_template("index.html", message="Authentication failed"),
-                    401,
-                )
-            if users[username]["role"] != role:
+            user = User.query.filter_by(username=username).first()
+            if (
+                not user
+                or not authenticate(username, user.password)
+                or user.role != role
+            ):
                 return render_template("index.html", message="Access denied"), 403
             return f(*args, **kwargs)
 
@@ -102,9 +101,10 @@ def login():
         password = request.form["password"]
         if authenticate(username, password):
             session["username"] = username
+            user = User.query.filter_by(username=username).first()
             return redirect(
                 url_for("upload_file")
-                if users[username]["role"] == "operation"
+                if user.role == "operation"
                 else url_for("client_files")
             )
         else:
@@ -136,8 +136,10 @@ def upload_file():
         filename = secure_filename(file.filename)
         file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
 
-        # Store file info (for demonstration, use a proper database in production)
-        uploaded_files.append({"filename": filename, "uploader": session["username"]})
+        # Store file info in database
+        uploaded_file = UploadedFile(filename=filename, uploader=session["username"])
+        db.session.add(uploaded_file)
+        db.session.commit()
 
         return render_template("upload.html", message="File uploaded")
 
@@ -149,7 +151,8 @@ def upload_file():
 @requires_auth
 @requires_role("client")
 def client_files():
-    return render_template("client_files.html", uploaded_files=uploaded_files)
+    files = UploadedFile.query.all()
+    return render_template("client_files.html", uploaded_files=files)
 
 
 # Route for Client User to download file
@@ -157,10 +160,8 @@ def client_files():
 @requires_auth
 @requires_role("client")
 def download_file(filename):
-    # Check if the file exists
-    file_info = next(
-        (file for file in uploaded_files if file["filename"] == filename), None
-    )
+    # Check if the file exists in the database
+    file_info = UploadedFile.query.filter_by(filename=filename).first()
     if not file_info:
         return render_template("download.html", message="File not found")
 
@@ -190,11 +191,13 @@ def signup():
         password = request.form["password"]
 
         # Check if username is already taken
-        if username in users:
+        if User.query.filter_by(username=username).first():
             return render_template("signup.html", message="Username already exists")
 
-        # Add new user to the database (simulated for demo)
-        users[username] = {"password": password, "role": "client"}
+        # Add new user to the database
+        new_user = User(username=username, password=password, role="client")
+        db.session.add(new_user)
+        db.session.commit()
 
         return redirect(url_for("login"))
 
@@ -202,4 +205,11 @@ def signup():
 
 
 if __name__ == "__main__":
+    # Create tables
+    with app.app_context():
+        db.create_all()
+        # Create a new user
+        # new_user = User(username="admin", password="admin", role="operation")
+        # db.session.add(new_user)
+        # db.session.commit()
     app.run(debug=True)
