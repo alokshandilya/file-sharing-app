@@ -23,6 +23,25 @@ if not os.path.exists(app.config["UPLOAD_FOLDER"]):
     os.makedirs(app.config["UPLOAD_FOLDER"])
 
 
+# Database models
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password = db.Column(db.String(120), nullable=False)
+    role = db.Column(db.String(20), nullable=False)
+
+
+class UploadedFile(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(255), nullable=False)
+    uploader = db.Column(db.String(80), nullable=False)
+
+
+# Create tables
+with app.app_context():
+    db.create_all()
+
+
 # Helper function to authenticate users
 def authenticate(username, password):
     if username in users and users[username]["password"] == password:
