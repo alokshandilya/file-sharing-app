@@ -116,7 +116,7 @@ def upload_file():
         file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
 
         # Store file info (for demonstration, use a proper database in production)
-        uploaded_files.append({'filename': filename, 'uploader': session['username']})
+        uploaded_files.append({"filename": filename, "uploader": session["username"]})
 
         return render_template("upload.html", message="File uploaded")
 
@@ -124,59 +124,61 @@ def upload_file():
 
 
 # Route for Client User to list uploaded files
-@app.route('/client-files')
+@app.route("/client-files")
 @requires_auth
-@requires_role('client')
+@requires_role("client")
 def client_files():
-    return render_template('client_files.html', uploaded_files=uploaded_files)
+    return render_template("client_files.html", uploaded_files=uploaded_files)
 
 
 # Route for Client User to download file
-@app.route('/download-file/<filename>')
+@app.route("/download-file/<filename>")
 @requires_auth
-@requires_role('client')
+@requires_role("client")
 def download_file(filename):
     # Check if the file exists
-    file_info = next((file for file in uploaded_files if file['filename'] == filename), None)
+    file_info = next(
+        (file for file in uploaded_files if file["filename"] == filename), None
+    )
     if not file_info:
-        return render_template('download.html', message='File not found')
+        return render_template("download.html", message="File not found")
 
     # Generate a secure URL for downloading the file
-    download_url = url_for('download', filename=filename, _external=True)
+    download_url = url_for("download", filename=filename, _external=True)
 
-    return render_template('download.html', download_link=download_url)
+    return render_template("download.html", download_link=download_url)
 
 
 # Route to handle the actual file download
-@app.route('/download/<filename>')
+@app.route("/download/<filename>")
 @requires_auth
-@requires_role('client')
+@requires_role("client")
 def download(filename):
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
     if not os.path.exists(file_path):
-        return render_template('download.html', message='File not found')
+        return render_template("download.html", message="File not found")
 
     return send_file(file_path, as_attachment=True)
 
 
 # Route for new clients to sign up
-@app.route('/signup', methods=['GET', 'POST'])
+@app.route("/signup", methods=["GET", "POST"])
 def signup():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
 
         # Check if username is already taken
         if username in users:
-            return render_template('signup.html', message='Username already exists')
+            return render_template("signup.html", message="Username already exists")
 
         # Add new user to the database (simulated for demo)
-        users[username] = {'password': password, 'role': 'client'}
+        users[username] = {"password": password, "role": "client"}
 
-        return redirect(url_for('login'))
+        return redirect(url_for("login"))
 
-    return render_template('signup.html')
+    return render_template("signup.html")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)
