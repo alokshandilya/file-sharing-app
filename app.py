@@ -32,11 +32,11 @@ def authenticate(username, password):
 def requires_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if 'username' not in session:
-            return render_template('login.html', message='Authentication failed'), 401
-        username = session['username']
-        if not authenticate(username, users[username]['password']):
-            return render_template('login.html', message='Authentication failed'), 401
+        if "username" not in session:
+            return render_template("index.html", message="Authentication failed"), 401
+        username = session["username"]
+        if not authenticate(username, users[username]["password"]):
+            return render_template("index.html", message="Authentication failed"), 401
         return f(*args, **kwargs)
 
     return decorated
@@ -47,13 +47,19 @@ def requires_role(role):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            if 'username' not in session:
-                return render_template('login.html', message='Authentication failed'), 401
-            username = session['username']
-            if not authenticate(username, users[username]['password']):
-                return render_template('login.html', message='Authentication failed'), 401
-            if users[username]['role'] != role:
-                return render_template('index.html', message='Access denied'), 403
+            if "username" not in session:
+                return (
+                    render_template("index.html", message="Authentication failed"),
+                    401,
+                )
+            username = session["username"]
+            if not authenticate(username, users[username]["password"]):
+                return (
+                    render_template("index.html", message="Authentication failed"),
+                    401,
+                )
+            if users[username]["role"] != role:
+                return render_template("index.html", message="Access denied"), 403
             return f(*args, **kwargs)
 
         return decorated_function
